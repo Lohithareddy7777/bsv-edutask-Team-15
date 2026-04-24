@@ -2,13 +2,12 @@ import pytest
 from unittest.mock import MagicMock
 from src.controllers.usercontroller import UserController
 
-# Fake user for testing
 FAKE_USER = {
     "name": "Test User",
     "email": "testuser@example.com"
 }
 
-# Fixture - creates a UserController with a fake DAO (no real database)
+
 @pytest.fixture
 def controller():
     mock_dao = MagicMock()
