@@ -2,12 +2,13 @@ import pytest
 from unittest.mock import MagicMock
 from src.controllers.usercontroller import UserController
 
+# Fake user for testing
 FAKE_USER = {
     "name": "Test User",
     "email": "testuser@example.com"
 }
 
-
+# Fixture - creates a UserController with a fake DAO (no real database)
 @pytest.fixture
 def controller():
     mock_dao = MagicMock()
@@ -24,8 +25,8 @@ def test_valid_email_found(controller):
 # BUG FOUND: code crashes with IndexError instead of returning None
 def test_email_not_found(controller):
     controller.dao.find.return_value = []
-    with pytest.raises(Exception):
-        controller.get_user_by_email("nobody@example.com")
+    result = controller.get_user_by_email("nobody@example.com")
+    assert result is None
 
 # Test 3 - email with no @ sign, should raise ValueError
 def test_invalid_email_format(controller):
