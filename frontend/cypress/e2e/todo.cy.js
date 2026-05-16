@@ -44,6 +44,7 @@ describe('R8 - Todo Management GUI Tests', () => {
     cy.wait(1000)
 
   })
+describe('R8UC1 - Create Todo', () => {
 
   it('TC1 - Create valid todo item', () => {
     addTodo('Finish Assignment')
@@ -59,7 +60,9 @@ describe('R8 - Todo Management GUI Tests', () => {
     addTodo('AAAAAAAAAAAAAAAAAAAAAAAAAAAA')
     cy.contains('AAAAAAAAAAAAAAAAAAAAAAAAAAAA').should('exist')
   })
+})
 
+describe('R8UC2 - Manage Todo', () => {
   it('TC4 - Toggle todo item', () => {
     addTodo('Toggle Todo')
     cy.contains('Toggle Todo').parent().click({ force: true })
@@ -78,7 +81,9 @@ describe('R8 - Todo Management GUI Tests', () => {
     cy.contains('Visible Todo').parent().click({ force: true })
     cy.contains('Visible Todo').should('exist')
   })
+})
 
+describe('R8UC3 - Delete Todo', () => {
   it('TC7 - Delete todo item', () => {
     addTodo('Delete Todo')
     cy.contains('Delete Todo').click({ force: true })
@@ -101,5 +106,5 @@ describe('R8 - Todo Management GUI Tests', () => {
     cy.get('body').should('not.contain', 'Delete Me')
     cy.contains('Keep Me').should('exist')
   })
-
+})
 })
