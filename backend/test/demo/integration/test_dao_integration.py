@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from src.util.dao import DAO
 
 
@@ -9,7 +10,11 @@ def dao_test():
     dao.collection.delete_many({"email": {"$regex": "@test.com$"}})
 
 
-def test_create_valid_user(dao_test):
+@patch("src.util.dao.getValidator")
+def test_create_valid_user(mock_validator, dao_test):
+
+    mock_validator.return_value = {}
+
     data = {
         "firstName": "Pushpak",
         "lastName": "Samuel",
@@ -17,10 +22,15 @@ def test_create_valid_user(dao_test):
     }
 
     result = dao_test.create(data)
+
     assert result is not None
 
 
-def test_create_without_email(dao_test):
+@patch("src.util.dao.getValidator")
+def test_create_without_email(mock_validator, dao_test):
+
+    mock_validator.return_value = {}
+
     data = {
         "firstName": "Pushpak",
         "lastName": "Samuel"
@@ -30,7 +40,11 @@ def test_create_without_email(dao_test):
         dao_test.create(data)
 
 
-def test_create_invalid_name_type(dao_test):
+@patch("src.util.dao.getValidator")
+def test_create_invalid_name_type(mock_validator, dao_test):
+
+    mock_validator.return_value = {}
+
     data = {
         "firstName": 123,
         "lastName": "Samuel",
@@ -41,12 +55,20 @@ def test_create_invalid_name_type(dao_test):
         dao_test.create(data)
 
 
-def test_create_empty_document(dao_test):
+@patch("src.util.dao.getValidator")
+def test_create_empty_document(mock_validator, dao_test):
+
+    mock_validator.return_value = {}
+
     with pytest.raises(Exception):
         dao_test.create({})
 
 
-def test_create_with_extra_field(dao_test):
+@patch("src.util.dao.getValidator")
+def test_create_with_extra_field(mock_validator, dao_test):
+
+    mock_validator.return_value = {}
+
     data = {
         "firstName": "Lohitha",
         "lastName": "Yarram",
@@ -54,4 +76,5 @@ def test_create_with_extra_field(dao_test):
     }
 
     result = dao_test.create(data)
+
     assert result is not None
