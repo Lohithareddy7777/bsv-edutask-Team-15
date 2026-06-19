@@ -1,13 +1,42 @@
+
 describe('R8 - Todo Management GUI Tests', () => {
 
   const addTodo = (todo) => {
+
     cy.get('input[placeholder="Add a new todo item"]')
+      .clear()
       .type(todo, { force: true })
 
     cy.contains('Add')
       .click({ force: true })
 
     cy.wait(500)
+
+  }
+
+  const closeAndReopenTask = () => {
+
+    cy.contains('close')
+      .click({ force: true })
+
+    cy.get('img')
+      .last()
+      .click({ force: true })
+
+    cy.wait(1000)
+
+  }
+
+  const deleteTodoAndRefresh = (description) => {
+
+    cy.contains(description)
+      .parents('.todo-item')
+      .find('.remover')
+      .click({ force: true })
+
+    // Verify deletion through GUI only
+    closeAndReopenTask()
+
   }
 
   beforeEach(() => {
@@ -24,13 +53,15 @@ describe('R8 - Todo Management GUI Tests', () => {
 
     cy.wait(2000)
 
+    const taskTitle = `MR BEAST TASK ${Date.now()}`
+
     cy.get('input[placeholder="Title of your Task"]')
       .first()
-      .type('MR BEAST TASK', { force: true })
+      .type(taskTitle, { force: true })
 
     cy.get('input[placeholder*="YouTube"]')
       .first()
-      .type('Wdjh81uH6FU', { force: true }) // Mr Beast video
+      .type('Wdjh81uH6FU', { force: true })
 
     cy.contains('Create new Task')
       .click({ force: true })
@@ -45,108 +76,138 @@ describe('R8 - Todo Management GUI Tests', () => {
 
   })
 
+  afterEach(() => {
+
+    const email = 'pedapati1samuel@gmail.com'
+
+    cy.request(`http://localhost:5001/users/bymail/${email}`)
+      .then((res) => {
+
+        const user = res.body
+
+        const uid =
+          user && user._id && user._id.$oid
+            ? user._id.$oid
+            : user._id
+
+        if (!uid) return
+
+        cy.request(`http://localhost:5001/tasks/ofuser/${uid}`)
+          .then((r) => {
+
+            const tasks = r.body || []
+
+            cy.wrap(tasks).each((task) => {
+
+              const tid =
+                task._id && task._id.$oid
+                  ? task._id.$oid
+                  : task._id
+
+              cy.request(
+                'DELETE',
+                `http://localhost:5001/tasks/byid/${tid}`
+              )
+
+            })
+
+          })
+
+      })
+
+  })
+
   describe('R8UC1 - Create Todo', () => {
 
     it('TC1 - Create valid todo item', () => {
+
       addTodo('Watch Mr Beast')
-      cy.contains('Watch Mr Beast').should('exist')
+
+      cy.contains('Watch Mr Beast')
+        .should('exist')
+
     })
 
-    it('TC2 - Empty todo should not crash system', () => {
-      cy.contains('Add').click({ force: true })
-      cy.get('body').should('exist')
-    })
+    it('TC2 - Empty todo keeps Add disabled', () => {
 
-    it('TC3 - Boundary todo input', () => {
-      addTodo('AAAAAAAAAAAAAAAAAAAAAAAAAAAA')
-      cy.contains('AAAAAAAAAAAAAAAAAAAAAAAAAAAA').should('exist')
+      cy.get('input[type="submit"][value="Add"]')
+        .should('be.disabled')
+
     })
 
   })
 
   describe('R8UC2 - Toggle Todo', () => {
 
-    it('TC4 - Toggle todo item', () => {
+    it('TC3 - Toggle active todo to completed', () => {
+
       addTodo('Toggle Todo')
-      cy.contains('Toggle Todo').parent().click({ force: true })
-      cy.contains('Toggle Todo').should('exist')
+
+      cy.contains('Toggle Todo')
+        .parents('.todo-item')
+        .find('.checker')
+        .click({ force: true })
+
+      cy.contains('Toggle Todo')
+        .parents('.todo-item')
+        .find('.checker')
+        .should('have.class', 'checked')
+
     })
 
-    it('TC5 - Toggle todo twice', () => {
+    it('TC4 - Toggle completed todo back to active', () => {
+
       addTodo('Double Toggle')
-      cy.contains('Double Toggle').parent().click({ force: true })
-      cy.contains('Double Toggle').parent().click({ force: true })
-      cy.contains('Double Toggle').should('exist')
+
+      cy.contains('Double Toggle')
+        .parents('.todo-item')
+        .find('.checker')
+        .click({ force: true })
+
+      cy.contains('Double Toggle')
+        .parents('.todo-item')
+        .find('.checker')
+        .click({ force: true })
+
+      cy.contains('Double Toggle')
+        .parents('.todo-item')
+        .find('.checker')
+        .should('have.class', 'unchecked')
+
     })
 
-    it('TC6 - Toggled todo remains visible', () => {
-      addTodo('Visible Todo')
-      cy.contains('Visible Todo').parent().click({ force: true })
-      cy.contains('Visible Todo').should('exist')
+  })
+
+  describe('R8UC3 - Delete Todo', () => {
+
+    it('TC5 - Delete active todo', () => {
+
+      addTodo('Delete Todo')
+
+      deleteTodoAndRefresh('Delete Todo')
+
+      cy.contains('Delete Todo')
+        .should('not.exist')
+
     })
 
-  })
+    it('TC6 - Delete completed todo', () => {
 
- describe('R8UC3 - Delete Todo', () => {
+      addTodo('Completed Todo')
 
-  it('TC7 - Delete todo item', () => {
+      cy.contains('Completed Todo')
+        .parents('.todo-item')
+        .find('.checker')
+        .click({ force: true })
 
-    addTodo('Delete Todo')
+      deleteTodoAndRefresh('Completed Todo')
 
-    cy.contains('Delete Todo')
-      .parent()
-      .within(() => {
-        cy.contains('✖')
-          .click({ force: true })
-      })
+      cy.contains('Completed Todo')
+        .should('not.exist')
 
-    cy.wait(1000)
-
-    cy.get('body')
-      .should('exist')
-
-  })
-
-  it('TC8 - Delete completed todo', () => {
-
-    addTodo('Completed Todo')
-
-    cy.contains('Completed Todo')
-      .parent()
-      .click({ force: true })
-
-    cy.contains('Completed Todo')
-      .parent()
-      .within(() => {
-        cy.contains('✖')
-          .click({ force: true })
-      })
-
-    cy.wait(1000)
-
-    cy.get('body')
-      .should('exist')
-
-  })
-
-  it('TC9 - Deleting one todo keeps remaining todos', () => {
-
-    addTodo('Delete Me')
-    addTodo('Keep Me')
-
-    cy.contains('Delete Me')
-      .parent()
-      .within(() => {
-        cy.contains('✖')
-          .click({ force: true })
-      })
-
-    cy.wait(1000)
-
-    cy.contains('Keep Me')
-      .should('exist')
+    })
 
   })
 
 })
-})
+
